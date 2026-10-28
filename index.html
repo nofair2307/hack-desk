@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daichi anti-hacking system</title>
+<style>
+:root{--g:#00ff66;--gd:#00a844;--bg:#020a04;--pn:rgba(0,20,8,.82);--r:#ff3b4e;--y:#ffd23f;--c:#3ff0ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--g);font-family:"Courier New",ui-monospace,Menlo,monospace}
+#rain{position:fixed;inset:0;z-index:0;opacity:.45}
+.wrap{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:12px}
+header{text-align:center;padding:10px 0 6px}
+h1{margin:0;font-size:clamp(20px,5.2vw,34px);letter-spacing:.08em;text-shadow:0 0 12px var(--g),0 0 28px var(--gd)}
+.sub{color:var(--y);font-size:clamp(14px,3.6vw,20px);margin-top:4px;text-shadow:0 0 10px var(--y);animation:bl 1.6s infinite}
+.clock{color:var(--gd);font-size:12px;margin-top:4px}
+@keyframes bl{50%{opacity:.55}}
+nav{display:flex;gap:6px;margin:10px 0}
+nav button{flex:1;padding:11px 4px;background:var(--pn);color:var(--gd);border:1px solid var(--gd);font:inherit;font-size:14px;cursor:pointer;letter-spacing:.05em}
+nav button.on{color:#001a08;background:var(--g);box-shadow:0 0 16px var(--g)}
+.pane{display:none}.pane.on{display:block}
+.box{background:var(--pn);border:1px solid var(--gd);box-shadow:0 0 14px rgba(0,255,102,.18) inset,0 0 10px rgba(0,255,102,.12);padding:12px;margin-bottom:10px}
+.box h2{margin:0 0 8px;font-size:13px;color:var(--c);letter-spacing:.12em;font-weight:normal}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{text-align:center}
+.stat b{display:block;font-size:clamp(20px,6vw,30px);text-shadow:0 0 10px var(--g)}
+.stat span{font-size:11px;color:var(--gd)}
+.bar{height:10px;background:#03210f;border:1px solid var(--gd);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--g);box-shadow:0 0 10px var(--g);transition:width .6s,background .6s}
+.row{display:flex;align-items:center;gap:8px;font-size:12px;margin:5px 0}
+.row em{width:78px;font-style:normal;color:var(--gd)}
+.row .bar{flex:1}
+#log{height:240px;overflow:hidden;font-size:12px;line-height:1.6}
+#log div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ok{color:var(--g)}.wn{color:var(--y)}.bk{color:var(--c)}.al{color:var(--r);text-shadow:0 0 8px var(--r)}
+.btn{background:transparent;border:1px solid var(--g);color:var(--g);padding:12px 18px;font:inherit;font-size:15px;cursor:pointer;letter-spacing:.1em;width:100%}
+.btn:hover:not(:disabled){background:var(--g);color:#001a08}
+.btn:disabled{opacity:.45;cursor:default}
+#hops{margin:12px 0;font-size:13px}
+.hop{display:flex;justify-content:space-between;gap:6px;padding:7px 8px;border-left:3px solid var(--g);background:rgba(0,255,102,.06);margin:5px 0;animation:in .4s}
+@keyframes in{from{opacity:0;transform:translateX(-14px)}}
+.hop small{color:var(--gd)}
+#res{display:none;border:1px solid var(--r);background:rgba(255,59,78,.1);padding:12px;margin-top:10px;font-size:13px;line-height:1.8}
+#res h3{margin:0 0 6px;color:var(--r);text-shadow:0 0 10px var(--r)}
+#term{height:min(56vh,460px);overflow-y:auto;font-size:13px;line-height:1.7;word-break:break-all}
+#term div{white-space:pre-wrap}
+.pr{display:flex;gap:8px;align-items:center;border-top:1px solid var(--gd);padding-top:10px;font-size:14px}
+.pr span{color:var(--c);white-space:nowrap}
+.pr input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--g);font:inherit;font-size:16px;caret-color:var(--g)}
+.mis{font-size:11px;color:var(--gd);margin-bottom:6px}
+.note{text-align:center;color:var(--gd);font-size:11px;padding:6px 0 14px}
+.flash{animation:fl .5s 3}
+.box{position:relative}
+.box::before,.box::after{content:"";position:absolute;width:12px;height:12px;border:2px solid var(--g);pointer-events:none}
+.box::before{top:-2px;left:-2px;border-right:0;border-bottom:0}
+.box::after{bottom:-2px;right:-2px;border-left:0;border-top:0}
+body::after{content:"";position:fixed;inset:0;z-index:30;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+#snd{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:10px;z-index:35;background:var(--pn);color:var(--g);border:1px solid var(--gd);font:inherit;font-size:12px;padding:7px 10px;cursor:pointer}
+#boot{position:fixed;inset:0;z-index:40;background:rgba(2,10,4,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:20px}
+#boot h2{margin:0;font-size:clamp(22px,5vw,42px);letter-spacing:.14em;text-shadow:0 0 16px var(--g)}
+#boot p{margin:0;color:var(--y);font-size:clamp(13px,3vw,18px)}
+#boot .btn{max-width:380px}
+#rd{display:block;width:100%;max-width:440px;margin:0 auto}
+@keyframes gl{50%{text-shadow:0 0 24px var(--g),0 0 60px var(--g)}}
+@media(min-width:900px){
+.wrap{max-width:1380px;padding:18px 32px}
+header{padding:18px 0 8px}
+h1{font-size:46px;letter-spacing:.22em;animation:gl 3s infinite}
+.sub{font-size:22px}
+nav{max-width:820px;margin:16px auto}
+nav button{padding:14px;font-size:16px}
+#mon.on{display:grid;grid-template-columns:1fr 1fr 1.15fr;grid-template-areas:"st th rd" "cy lg rd";gap:14px}
+#mon .box{margin:0}
+#mon>.box:nth-child(1){grid-area:st}
+#mon>.box:nth-child(2){grid-area:th}
+#mon>.box:nth-child(3){grid-area:cy}
+#mon>.box:nth-child(4){grid-area:lg}
+#mon>.box:nth-child(5){grid-area:rd}
+#log{height:330px;font-size:13px}
+.stat b{font-size:36px}
+#trc .box,#cmd .box{max-width:1000px;margin:0 auto}
+#term{height:60vh;font-size:15px}
+.pr input{font-size:18px}
+}
+@keyframes fl{50%{background:rgba(255,59,78,.35)}}
+</style>
+</head>
+<body>
+<canvas id="rain"></canvas>
+<button id="snd">🔇 SOUND OFF</button>
+<div id="boot"><h2>Daichi anti-hacking system</h2><p>「GMOを守れ！」</p><button class="btn" id="b1">▶ システム起動（音あり）</button><button class="btn" id="b2">音なしで起動</button></div>
+<div class="wrap">
+<header>
+<h1>Daichi anti-hacking system</h1>
+<div class="sub">「GMOを守れ！」</div>
+<div class="clock" id="clk"></div>
+</header>
+<nav>
+<button class="on" data-t="mon">◉ 監視モード</button>
+<button data-t="trc">⌖ 追跡モード</button>
+<button data-t="cmd">&gt;_ コマンド</button>
+</nav>
+
+<section class="pane on" id="mon">
+<div class="box">
+<div class="grid">
+<div class="stat"><b id="s1">0</b><span>検知した攻撃</span></div>
+<div class="stat"><b id="s2">0</b><span>遮断成功</span></div>
+<div class="stat"><b id="s3">0</b><span>監視中の接続</span></div>
+</div>
+</div>
+<div class="box">
+<h2>◆ 脅威レベル</h2>
+<div class="bar"><i id="thr"></i></div>
+<div class="row"><span id="thl">---</span></div>
+</div>
+<div class="box">
+<h2>◆ 攻撃元（推定）</h2>
+<div id="cty"></div>
+</div>
+<div class="box">
+<h2>◆ リアルタイム監視ログ</h2>
+<div id="log"></div>
+</div>
+<div class="box">
+<h2>◆ 広域レーダー</h2>
+<canvas id="rd" width="400" height="400"></canvas>
+</div>
+</section>
+
+<section class="pane" id="trc">
+<div class="box">
+<h2>◆ 逆探知トレーサー</h2>
+<button class="btn" id="go">▶ 追跡開始：コードネーム PHANTOM-7</button>
+<div class="bar" style="margin-top:12px"><i id="pg" style="width:0"></i></div>
+<div id="hops"></div>
+<div id="res">
+<h3>■ 容疑者を特定</h3>
+<div>コードネーム：PHANTOM-7</div>
+<div>最終IP：203.0.113.77</div>
+<div>潜伏先：どこかの薄暗い地下サーバー室</div>
+<div>危険度：★★★★☆</div>
+<div style="color:var(--y)">→ 全データを関係機関へ送信済み。GMOは守られた！</div>
+</div>
+</div>
+</section>
+
+<section class="pane" id="cmd">
+<div class="box">
+<div class="mis" id="mis">MISSION 0 / 8</div>
+<div id="term"></div>
+<div class="pr"><span>onoda@matrix:~#</span><input id="in" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="適当に打ってEnter"></div>
+</div>
+</section>
+
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const pick=a=>a[rnd(0,a.length-1)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+const cv=$("#rain"),cx=cv.getContext("2d");
+const chars="ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ0123456789".split("");
+let cols,drops;
+function fit(){cv.width=innerWidth;cv.height=innerHeight;cols=Math.floor(cv.width/16);drops=Array.from({length:cols},()=>rnd(-40,0))}
+fit();addEventListener("resize",fit);
+setInterval(()=>{
+cx.fillStyle="rgba(2,10,4,.12)";cx.fillRect(0,0,cv.width,cv.height);
+cx.font="15px monospace";
+for(let i=0;i<cols;i++){
+cx.fillStyle=Math.random()>.96?"#d8ffe6":"#00ff66";
+cx.fillText(pick(chars),i*16,drops[i]*16);
+if(drops[i]*16>cv.height&&Math.random()>.975)drops[i]=0;
+drops[i]++;
+}
+},60);
+
+setInterval(()=>{$("#clk").textContent="SYS TIME "+new Date().toLocaleString("ja-JP")+"  ／  STATUS: ONLINE"},1000);
+
+$$("nav button").forEach(b=>b.onclick=()=>{
+$$("nav button").forEach(x=>x.classList.remove("on"));
+$$(".pane").forEach(x=>x.classList.remove("on"));
+b.classList.add("on");$("#"+b.dataset.t).classList.add("on");
+if(b.dataset.t==="cmd")$("#in").focus();
+});
+
+let atk=0,blk=0,thr=20;
+const ctys=[["不明",0],["ロシア圏",0],["北米",0],["東南アジア",0],["欧州",0]];
+$("#cty").innerHTML=ctys.map((c,i)=>`<div class="row"><em>${c[0]}</em><div class="bar"><i id="c${i}"></i></div></div>`).join("");
+const tpl=[
+["ok",()=>`[OK]    正常アクセス 198.51.100.${rnd(1,254)} → /index`],
+["ok",()=>`[OK]    認証成功 user_${rnd(1000,9999)}`],
+["wn",()=>`[WARN]  ポートスキャン検知 203.0.113.${rnd(1,254)}`],
+["wn",()=>`[WARN]  ブルートフォース試行 ${rnd(20,400)}回/分`],
+["bk",()=>`[BLOCK] SQLインジェクション遮断 192.0.2.${rnd(1,254)}`],
+["bk",()=>`[BLOCK] 不審なボット通信を遮断`],
+["al",()=>`[ALERT] 不正侵入の兆候！ 203.0.113.${rnd(1,254)}`],
+["bk",()=>`[BLOCK] DDoS波形を吸収 ${rnd(2,90)}Gbps`]
+];
+function tick(){
+const t=pick(tpl);
+const d=document.createElement("div");
+d.className=t[0];d.textContent=new Date().toLocaleTimeString("ja-JP")+"  "+t[1]();
+const lg=$("#log");lg.prepend(d);
+while(lg.children.length>14)lg.lastChild.remove();
+if(t[0]!=="ok")atk++;
+if(t[0]==="bk"){blk++;sfx("block")}
+if(t[0]==="al"){sfx("alarm");thr=Math.min(98,thr+25);$("#mon .box").classList.remove("flash");void $("#mon .box").offsetWidth;$("#mon .box").classList.add("flash")}
+thr=Math.max(8,Math.min(98,thr+rnd(-6,5)));
+$("#s1").textContent=atk;$("#s2").textContent=blk;$("#s3").textContent=rnd(1200,1800);
+const b=$("#thr");b.style.width=thr+"%";
+b.style.background=thr>70?"var(--r)":thr>40?"var(--y)":"var(--g)";
+$("#thl").textContent=thr>70?"危険 DANGER":thr>40?"警戒 CAUTION":"平穏 SAFE";
+$("#thl").style.color=thr>70?"var(--r)":thr>40?"var(--y)":"var(--g)";
+ctys.forEach((c,i)=>{$("#c"+i).style.width=rnd(8,95)+"%"});
+}
+setInterval(tick,800);tick();
+
+var AC=null,on=false,hum=null;
+function tone(f,d,ty,v,dl,sl){
+const t=AC.currentTime+(dl||0),o=AC.createOscillator(),g=AC.createGain();
+o.type=ty;o.frequency.setValueAtTime(f,t);
+if(sl)o.frequency.linearRampToValueAtTime(f+sl,t+d);
+g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.02);
+}
+function sfx(k){
+if(!on||!AC)return;
+if(k==="type")tone(900+rnd(0,500),.03,"square",.015);
+if(k==="key")tone(1500+rnd(0,300),.02,"square",.02);
+if(k==="block"){tone(660,.07,"triangle",.05);tone(990,.09,"triangle",.05,.08)}
+if(k==="alarm"){for(let i=0;i<4;i++)tone(i%2?520:880,.16,"sawtooth",.05,i*.18)}
+if(k==="warn")tone(220,.28,"sawtooth",.04,0,-90);
+if(k==="blip")tone(1400,.06,"sine",.07);
+if(k==="win"){[523,659,784,1047,1319].forEach((f,i)=>tone(f,.28,"triangle",.07,i*.13))}
+if(k==="boot")tone(120,.9,"sawtooth",.05,0,900);
+}
+function setSound(v){
+on=v;
+if(v){
+if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();
+if(AC.state==="suspended")AC.resume();
+if(!hum){
+const o=AC.createOscillator(),g=AC.createGain(),f=AC.createBiquadFilter();
+o.type="sawtooth";o.frequency.value=48;f.type="lowpass";f.frequency.value=160;g.gain.value=.022;
+o.connect(f);f.connect(g);g.connect(AC.destination);o.start();hum={o,g};
+}
+hum.g.gain.value=.022;
+}else if(hum){hum.g.gain.value=0}
+$("#snd").textContent=v?"🔊 SOUND ON":"🔇 SOUND OFF";
+}
+$("#snd").onclick=()=>{setSound(!on);sfx("blip")};
+$("#b1").onclick=()=>{setSound(true);sfx("boot");$("#boot").remove()};
+$("#b2").onclick=()=>{$("#boot").remove()};
+const rd=$("#rd"),rc=rd.getContext("2d");
+let ang=0,bls=[];
+setInterval(()=>{
+rc.clearRect(0,0,400,400);
+rc.lineWidth=1;rc.strokeStyle="rgba(0,255,102,.35)";
+[190,140,90,40].forEach(r=>{rc.beginPath();rc.arc(200,200,r,0,7);rc.stroke()});
+rc.beginPath();rc.moveTo(200,10);rc.lineTo(200,390);rc.moveTo(10,200);rc.lineTo(390,200);rc.stroke();
+ang+=.05;
+for(let i=0;i<30;i++){
+rc.strokeStyle=`rgba(0,255,102,${.55-i*.018})`;
+rc.beginPath();rc.moveTo(200,200);rc.lineTo(200+Math.cos(ang-i*.03)*190,200+Math.sin(ang-i*.03)*190);rc.stroke();
+}
+if(Math.random()<.05)bls.push({a:Math.random()*6.28,r:30+Math.random()*150,l:1,x:Math.random()<.4});
+bls=bls.filter(b=>b.l>0);
+bls.forEach(b=>{
+rc.fillStyle=b.x?`rgba(255,59,78,${b.l})`:`rgba(0,255,102,${b.l})`;
+rc.beginPath();rc.arc(200+Math.cos(b.a)*b.r,200+Math.sin(b.a)*b.r,b.x?5:3,0,7);rc.fill();
+b.l-=.012;
+});
+},40);
+const hops=[
+["踏み台 #1","203.0.113.12","シンガポール（偽装）"],
+["踏み台 #2","198.51.100.48","ブラジル（偽装）"],
+["踏み台 #3","192.0.2.201","アイスランド（偽装）"],
+["踏み台 #4","203.0.113.93","南極基地（偽装）"],
+["踏み台 #5","198.51.100.7","月面中継局（偽装）"],
+["本体","203.0.113.77","地下サーバー室"]
+];
+$("#go").onclick=async()=>{
+const go=$("#go");go.disabled=true;
+$("#hops").innerHTML="";$("#res").style.display="none";$("#pg").style.width="0";
+for(let i=0;i<hops.length;i++){
+await sleep(900);
+const h=hops[i],d=document.createElement("div");
+d.className="hop";
+d.innerHTML=`<span>▶ ${h[0]}　${h[1]}</span><small>${h[2]}　${rnd(12,240)}ms</small>`;
+$("#hops").appendChild(d);
+sfx("blip");$("#pg").style.width=Math.round((i+1)/hops.length*100)+"%";
+}
+await sleep(700);
+sfx("win");$("#res").style.display="block";
+go.disabled=false;go.textContent="▶ もう一度追跡する";
+};
+
+const term=$("#term"),inp=$("#in");
+function put(t,c){
+const d=document.createElement("div");
+d.textContent=t;if(c)d.className=c;
+term.appendChild(d);term.scrollTop=term.scrollHeight;sfx(c==="al"?"warn":"type");
+}
+let busy=false,step=0,lastCmd="";
+const story=[
+[["[SYSTEM] 緊急事態：GMOサーバーに不正アクセスを検知！","wn"],["[SYSTEM] Daichi anti-hacking system、待機中…","ok"],["[SYSTEM] 何かコマンドを入力して作戦を開始せよ。","bk"]],
+[["root@onoda:~# 侵入経路スキャンを開始","bk"],["> ポート22 ... 異常あり","wn"],["> ポート443 ... 異常あり","wn"],["> 攻撃者のコードネームを特定：PHANTOM-7","al"],["> 目的：GMOの顧客データ奪取","al"]],
+[["> ログ解析を実行中 ████████░░ 80%","ok"],["> ████████████ 100%","ok"],["> 攻撃者は世界5か所の踏み台を経由していると判明","wn"],["> 本物のIPを隠しているようだ…","wn"]],
+[["> ファイアウォール強化プロトコル起動","bk"],["> 防御レベル：MAX","ok"],["> 全データの暗号化に成功。GMOの金庫は無事だ！","ok"]],
+[["> 防衛網を構築：監視ノード128基を展開","ok"],["> 全サーバーの脆弱性チェックを開始","bk"],["> 発見：古いライブラリ3件 → 即時修正","wn"],["> 修正完了。穴は塞いだ。","ok"]],
+[["> 敵の通信パターンを学習中 ...","bk"],["> 攻撃は毎回、深夜3時台にピークを迎える傾向","wn"],["> 敵は人間だ。機械ではない、癖がある。","ok"],["> 罠（ハニーポット）を設置：偽の顧客データを餌に配置","ok"],["> 敵が餌に食いついた！","wn"]],
+[["> 追跡ルートを展開","bk"],["  hop1 203.0.113.12  シンガポール（偽装）","ok"],["  hop2 198.51.100.48 ブラジル（偽装）","ok"],["  hop3 192.0.2.201   アイスランド（偽装）","ok"],["  hop4 203.0.113.93  南極基地（偽装）","ok"],["  hop5 198.51.100.7  月面中継局（偽装）","ok"]],
+[["！！！ 警告 ！！！","al"],["PHANTOM-7が逆ハッキングを開始！","al"],["> こちらの画面が乗っ取られかけている…","al"],["> 負けるな、小野田！","wn"]],
+[["> Daichiプロトコル、発動！","wn"],["> 気合い ......... 注入","ok"],["> 根性 ......... 注入","ok"],["> 逆ハッキングを完全に撃退した！","ok"],["> 敵の最終IPを捕捉：203.0.113.77","ok"]],
+[["> 緊急：捕捉したIPが突然消失…","al"],["> 敵が回線を切断して逃走した模様！","al"],["> 解析：捕捉IP 198.51.100.250 は囮（デコイ）だった","wn"],["> やるな、PHANTOM-7。","bk"],["> Daichi式・広域索敵モードに切り替える","ok"]],
+[["> GMOセキュリティ本部との暗号通信を確立","ok"],["  [本部] 小野田さん、こちらでも異常を確認しています！","bk"],["  [本部] 顧客データベースの一部で不審な書き込みが…","wn"],["  [小野田] 落ち着け。全てのログを俺に回せ。","ok"],["> 本部ログ 4,812,339件を受信","ok"],["> 照合中 ██████████ 100%","ok"]],
+[["> 不審なプログラムを発見：SHADOW-WORM","al"],["> 感染済みサーバー：12台 ／ なお拡大中","al"],["> 挙動：夜間にデータを少しずつ外部へ送信","wn"],["> 隔離用サンドボックスを起動 ... 完了","ok"],["> ワームの構造を解析中 ...","bk"],["> 発見：作者の癖を示す文字列が残されている！","wn"]],
+[["> 駆除パッチ「Daichi Patch v1.0」を生成","ok"],["> 感染サーバー 12 → 9 → 5 → 2 → 0","ok"],["> SHADOW-WORMを完全に駆除","ok"],["> 顧客データの流出：0件を確認","ok"],["  [本部] すごい…被害ゼロです！","bk"]],
+[["！！！ 全回線に大規模攻撃 ！！！","al"],["> DDoS 120Gbps ... 240Gbps ... 400Gbps","al"],["> 回線が悲鳴を上げている","al"],["  [本部] このままではサーバーが落ちます！","wn"],["  [小野田] まだだ。まだ終わっていない。","ok"]],
+[["> Daichi式・全回線同期防御プロトコル起動","wn"],["> 世界中のミラー回線を同期 ...","ok"],["> 攻撃トラフィックを分散・吸収・無害化","ok"],["> 400Gbps → 120Gbps → 30Gbps → 0Gbps","ok"],["> 攻撃の波が止まった。GMOのサーバーは無傷だ。","ok"]],
+[["> 敵の通信を傍受（暗号解除）","bk"],["  [PHANTOM-7] なぜ邪魔をする…あと少しだったのに！","al"],["  [PHANTOM-7] お前は何者だ。","al"],["  [小野田] 通りすがりの守り人だ。","ok"],["> 敵の回線に微弱な揺らぎを確認。焦っている。","wn"]],
+[["> 揺らぎの発生源を逆算 ...","bk"],["> 時差・遅延・癖を照合 ...","bk"],["> 敵のタイピングの癖を解析：特徴一致 98.7%","wn"],["> 囮ではない本物の接続を発見","ok"],["> 本当の最終IP：203.0.113.77","ok"],["> 位置を絞り込み中 ████████░░","ok"]],
+[["> 関係機関へ緊急連絡を送信","ok"],["> 捜査チームが現地へ出動！","ok"],["> 敵が最後のあがきでログ消去を開始…","al"],["> させるか！ ログ保全プロトコルを発動","wn"],["> 証拠データのバックアップ 3か所へ完了","ok"]],
+[["> 位置を特定：地下サーバー室","ok"],["> 容疑者PHANTOM-7を確保！","ok"],["> 証拠データを関係機関へ送信完了","ok"],["","ok"],["★★★ MISSION COMPLETE ★★★","wn"],["GMOは守られた！　ありがとう、小野田！","wn"],["（何か入力すると最初からやり直せます）","bk"]]
+];
+async function play(n){
+busy=true;
+$("#mis").textContent=`MISSION ${n} / ${story.length-1}`;if(n===story.length-1)sfx("win");
+if(n>0&&n<story.length-1){put(`> コマンド「${lastCmd}」受理 … 実行`,"bk");await sleep(300)}
+for(const l of story[n]){put(l[0],l[1]);await sleep(rnd(260,520))}
+busy=false;inp.focus();
+}
+inp.addEventListener("keydown",async e=>{
+if(e.key!=="Enter"||busy)return;
+const v=inp.value.trim();inp.value="";
+if(!v)return;
+put("onoda@matrix:~# "+v,"bk");lastCmd=v;
+if(v==="clear"){term.innerHTML="";return}
+if(v==="help"){put("ヒント：何を打ってもOK。Enterを押すたびに物語が進みます。clearで画面を消去。","wn");return}
+step++;
+if(step>=story.length){step=0;term.innerHTML="";await sleep(300);$("#mis").textContent="MISSION 0 / "+(story.length-1);play(0).then(()=>{});return}
+play(step);
+});
+inp.addEventListener("keydown",e=>{if(e.key.length===1)sfx("key")});
+play(0);
+</script>
+</body>
+</html>
